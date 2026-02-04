@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        // Cache Playwright browsers in workspace
+        PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}\\.playwright"
+    }
+
     stages {
 
         stage('Checkout') {
@@ -9,12 +14,29 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install Dependencies (cached)') {
             steps {
-                bat 'npm install'
-                //bat 'npx playwright install'
-                bat 'npx playwright install chromium'
+                bat '''
+                if not exist node_modules (
+                  echo Installing npm dependencies...
+                  npm install
+                ) else (
+                  echo node_modules cache found, skipping npm install
+                )
+                '''
+            }
+        }
 
+        stage('Install Playwright Chromium (cached)') {
+            steps {
+                bat '''
+                if not exist "%PLAYWRIGHT_BROWSERS_PATH%\\chromium" (
+                  echo Installing Chromium browser...
+                  npx playwright install chromium
+                ) else (
+                  echo Chromium already cached, skipping install
+                )
+                '''
             }
         }
 
@@ -26,12 +48,6 @@ pipeline {
     }
 
     post {
-        success {
-            echo '✅ Playwright tests PASSED'
-        }
-        failure {
-            echo '❌ Playwright tests FAILED'
-        }
         always {
             archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
         }
