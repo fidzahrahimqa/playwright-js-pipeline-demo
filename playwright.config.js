@@ -25,6 +25,14 @@ export default defineConfig({
     ['html', { open: 'never' }]
   ],
 
+  /* 👇 FORCE CHROMIUM ONLY */
+  projects: [
+    {
+      name: 'chromium',
+      use: { browserName: 'chromium' }
+    }
+  ],
+
   use: {
     baseURL: 'https://www.saucedemo.com',
 
