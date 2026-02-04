@@ -2,17 +2,11 @@ pipeline {
     agent any
 
     environment {
-        // Cache Playwright browsers in workspace
+        // Cache Playwright browsers inside Jenkins workspace
         PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}\\.playwright"
     }
 
     stages {
-
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
 
         stage('Install Dependencies (cached)') {
             steps {
@@ -30,7 +24,7 @@ pipeline {
         stage('Install Playwright Chromium (cached)') {
             steps {
                 bat '''
-                if not exist "%PLAYWRIGHT_BROWSERS_PATH%\\chromium" (
+                if not exist "%PLAYWRIGHT_BROWSERS_PATH%\\chromium-*" (
                   echo Installing Chromium browser...
                   npx playwright install chromium
                 ) else (
@@ -50,6 +44,12 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
+        }
+        success {
+            echo '✅ Playwright tests PASSED (Chromium)'
+        }
+        failure {
+            echo '❌ Playwright tests FAILED (Chromium)'
         }
     }
 }
