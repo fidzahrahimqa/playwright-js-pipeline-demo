@@ -2,22 +2,36 @@ pipeline {
     agent any
 
     stages {
+
         stage('Checkout') {
             steps {
-                echo 'Code checked out from GitHub'
+                checkout scm
             }
         }
 
-        stage('Build') {
+        stage('Install Dependencies') {
             steps {
-                echo 'Build step'
+                bat 'npm install'
+                bat 'npx playwright install'
             }
         }
 
-        stage('Test') {
+        stage('Run Playwright Tests') {
             steps {
-                echo 'Test step'
+                bat 'npm test'
             }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Playwright tests PASSED'
+        }
+        failure {
+            echo '❌ Playwright tests FAILED'
+        }
+        always {
+            archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
         }
     }
 }
